@@ -3,11 +3,21 @@ version: 1.0.{build}
 image: Visual Studio 2022
 
 environment:
-  JAVA_HOME: C:\Program Files\Java\jdk11
-  GRADLE_HOME: C:\ProgramData\chocolatey\lib\gradle\tools\gradle-7.6
+  JAVA_HOME: C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot
+  GRADLE_OPTS: -Dfile.encoding=UTF-8
 
 install:
-  - choco install jdk11 -y
+
+  - ps: |
+      $url = "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_windows_hotspot_11.0.20.1_1.zip"
+      $zipFile = "jdk11.zip"
+      (New-Object Net.WebClient).DownloadFile($url, $zipFile)
+      Expand-Archive -Path $zipFile -DestinationPath "C:\Program Files\Eclipse Adoptium"
+      Rename-Item "C:\Program Files\Eclipse Adoptium\jdk-11.0.20.1+1" "C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot"
+      Remove-Item $zipFile
+      [Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot", "Machine")
+      refreshenv
+
   - choco install gradle -y
   - refreshenv
 
@@ -20,9 +30,3 @@ test_script:
 artifacts:
   - path: build\reports\tests\test\**
     name: TestReport
-  - path: build\libs\**
-    name: BuildOutput
-
-on_finish:
-  - ps: |
-      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
