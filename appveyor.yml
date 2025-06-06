@@ -4,28 +4,33 @@ image: Visual Studio 2022
 
 environment:
   JAVA_HOME: C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot
-  GRADLE_OPTS: -Dfile.encoding=UTF-8
+  SELENIDE_HEADLESS: true
 
 install:
-
   - ps: |
+      # Устанавливаем JDK 11
       $url = "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_windows_hotspot_11.0.20.1_1.zip"
-      $zipFile = "jdk11.zip"
+      $zipFile = "$env:TEMP\jdk11.zip"
       (New-Object Net.WebClient).DownloadFile($url, $zipFile)
       Expand-Archive -Path $zipFile -DestinationPath "C:\Program Files\Eclipse Adoptium"
       Rename-Item "C:\Program Files\Eclipse Adoptium\jdk-11.0.20.1+1" "C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot"
-      Remove-Item $zipFile
       [Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Eclipse Adoptium\jdk-11.0.11.9-hotspot", "Machine")
       refreshenv
-
   - choco install gradle -y
+  - choco install googlechrome -y
   - refreshenv
 
 build_script:
   - gradle build
 
 test_script:
-  - gradle test
+  - ps: |
+      # Запускаем сервер в фоновом режиме
+      Start-Process -NoNewWindow -FilePath "java" -ArgumentList "-jar artifacts/app-ibank-build-for-testers.jar"
+      # Ждем 10 секунд для запуска сервера
+      Start-Sleep -Seconds 10
+      # Запускаем тесты
+      gradle test
 
 artifacts:
   - path: build\reports\tests\test\**

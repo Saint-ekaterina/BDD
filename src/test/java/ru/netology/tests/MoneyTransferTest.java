@@ -21,10 +21,20 @@ public class MoneyTransferTest {
         Configuration.browserSize = "1920x1080";
         SelenideLogger.addListener("allure", new AllureSelenide());
     }
+    @Testcontainers
+    class MoneyTransferTest {
+        @Container
+        public static GenericContainer<?> appContainer = new GenericContainer<>(
+                DockerImageName.parse("your-docker-image"))
+                .withExposedPorts(9999)
+                .withCommand("java", "-jar", "app-ibank-build-for-testers.jar");
 
-    @BeforeEach
-    void setUp() {
-        open("http://localhost:9999");
+        @BeforeEach
+        void setUp() {
+            String url = "http://" + appContainer.getHost() + ":" + appContainer.getMappedPort(9999);
+            Configuration.baseUrl = url;
+            open("/");
+        }
     }
 
     @AfterAll
