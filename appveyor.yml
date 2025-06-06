@@ -1,0 +1,28 @@
+version: 1.0.{build}
+
+image: Visual Studio 2022
+
+environment:
+  JAVA_HOME: C:\Program Files\Java\jdk11
+  GRADLE_HOME: C:\ProgramData\chocolatey\lib\gradle\tools\gradle-7.6
+
+install:
+  - choco install jdk11 -y
+  - choco install gradle -y
+  - refreshenv
+
+build_script:
+  - gradle build
+
+test_script:
+  - gradle test
+
+artifacts:
+  - path: build\reports\tests\test\**
+    name: TestReport
+  - path: build\libs\**
+    name: BuildOutput
+
+on_finish:
+  - ps: |
+      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
